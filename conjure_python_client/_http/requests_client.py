@@ -100,9 +100,7 @@ class Service(object):
         self._connect_timeout = _connect_timeout
         self._read_timeout = _read_timeout
         self._verify = _verify
-        self._return_none_for_unknown_union_types = (
-            _return_none_for_unknown_union_types
-        )
+        self._return_none_for_unknown_union_types = _return_none_for_unknown_union_types
 
     @property
     def _uri(self) -> str:
@@ -158,7 +156,8 @@ def _add_trace_id(kwargs: Dict[str, Any]) -> None:
     # Adds the trace ID to the arguments
     if "headers" not in kwargs:
         kwargs["headers"] = {}
-    kwargs["headers"][TRACE_ID_HEADER] = fresh_trace_id()
+    if not kwargs["headers"].get(TRACE_ID_HEADER):
+        kwargs["headers"][TRACE_ID_HEADER] = fresh_trace_id()
 
 
 class RetryWithJitter(Retry):
@@ -219,6 +218,7 @@ class RequestsClient(object):
 
 class TransportAdapter(HTTPAdapter):
     """Transport adapter that allows customising ssl things"""
+
     ENABLE_KEEP_ALIVE_ATTR = "_enable_keep_alive"
 
     __attrs__ = HTTPAdapter.__attrs__ + [ENABLE_KEEP_ALIVE_ATTR]
@@ -227,9 +227,7 @@ class TransportAdapter(HTTPAdapter):
         self._enable_keep_alive = enable_keep_alive
         super().__init__(*args, **kwargs)
 
-    def init_poolmanager(
-        self, connections, maxsize, block=False, **pool_kwargs
-    ):
+    def init_poolmanager(self, connections, maxsize, block=False, **pool_kwargs):
         self._pool_connections = connections
         self._pool_maxsize = maxsize
         self._pool_block = block
